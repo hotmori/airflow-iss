@@ -26,18 +26,12 @@ def get_iss_data():
     if message != "success":
         raise ValueError('ISS API response error message:', message)
     
-    iss_position = json_data["iss_position"]
     latitude = json_data["iss_position"]["latitude"]
     longitude = json_data["iss_position"]["longitude"]
     timestamp = json_data["timestamp"]
     iss_result = {"ux_timestamp":timestamp, "latitude": latitude, "longitude": longitude, "message": message}
-    #iss_data.xcom_push(key='iss_data', value=result) 
 
     return iss_result
-    print("iss_position: ", iss_position)
-    print("timestamp: ", timestamp)
-    print("latitude: ", latitude)
-    print("longitude: ", longitude)
     
 
 
