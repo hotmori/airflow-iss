@@ -43,7 +43,7 @@ def get_iss_data():
 
 with DAG(dag_id="iss_data_dag",
          start_date=datetime(2021,1,1),
-         schedule_interval="30 * * * *",
+         schedule_interval="5 * * * *",
          catchup=False) as dag:
     
     task_get_iss_data = PythonOperator(
