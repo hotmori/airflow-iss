@@ -7,7 +7,7 @@ import requests
 def finalize():
     print("All is done")
 
-def get_iss_data(iss_data):
+def get_iss_data():
     url = 'http://api.open-notify.org/iss-now.json'
     x = requests.get(url)
     status_code = x.status_code
@@ -30,10 +30,10 @@ def get_iss_data(iss_data):
     latitude = json_data["iss_position"]["latitude"]
     longitude = json_data["iss_position"]["longitude"]
     timestamp = json_data["timestamp"]
-    result = {"timestamp":timestamp, "latitude": latitude, "longitude": longitude, "message": message}
-    iss_data.xcom_push(key='iss_data', value=result) 
+    iss_result = {"ux_timestamp":timestamp, "latitude": latitude, "longitude": longitude, "message": message}
+    #iss_data.xcom_push(key='iss_data', value=result) 
 
-    return 
+    return iss_result
     print("iss_position: ", iss_position)
     print("timestamp: ", timestamp)
     print("latitude: ", latitude)
@@ -57,10 +57,16 @@ with DAG(dag_id="iss_data_dag",
     
     task_save_data = PostgresOperator(task_id = "save_data_postgres_db",
                                       postgres_conn_id="postgres_default",
-                                      sql = """insert into iss_positions(ts, longitude, latitude,message) \
-                                               values(to_timestamp('{{ params.ux_timestamp }}'), 57.4463, 10.4216, 'success' );
+                                      sql = """insert into iss_positions(ts, \
+                                                                         longitude, \
+                                                                         latitude, \
+                                                                         message) \
+                                               values(to_timestamp('{{ ti.xcom_pull(key='return_value', task_ids='get_iss_data')['ux_timestamp'] }}'), \
+                                                                     '{{ ti.xcom_pull(key='return_value', task_ids='get_iss_data')['longitude'] }}', \
+                                                                     '{{ ti.xcom_pull(key='return_value', task_ids='get_iss_data')['latitude'] }}', \
+                                                                     '{{ ti.xcom_pull(key='return_value', task_ids='get_iss_data')['message'] }}' );
                                             """,
-                                      params = {'ux_timestamp':1679483851},
+                                      params = {},
                                       autocommit = True)
 
     task_finalize = PythonOperator(
